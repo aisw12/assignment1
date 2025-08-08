@@ -1,8 +1,8 @@
 import React from "react";
-import Task from "./components/Task";
+import TaskPlanner from "./components/Task";
 
 const App: React.FC = () => {
-  return <Task />;
+  return <TaskPlanner />;
 };
 
 export default App;

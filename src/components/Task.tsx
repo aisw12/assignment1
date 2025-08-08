@@ -24,7 +24,7 @@ interface Task {
   end: Date;
 }
 
-const Task: React.FC = () => {
+const TaskPlanner: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [dragStart, setDragStart] = useState<Date | null>(null);
   const [dragEnd, setDragEnd] = useState<Date | null>(null);
@@ -319,4 +319,4 @@ const filteredTasks = tasks.filter((task) => {
   );
 };
 
-export default Task;
+export default TaskPlanner;
