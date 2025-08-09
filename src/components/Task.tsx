@@ -15,7 +15,7 @@ import {
 import "../App.css";
 
 const categoryStyles = {
-  "To Do": "#2196f3",
+  "To Do": "#6643dbff",
   "In Progress": "#ff9800",
   Review: "#9c27b0",
   Completed: "#4caf50",
@@ -179,7 +179,7 @@ if (resizingTaskId !== null) {
   return (
     <div className="app">
       <div className="header-center">
-          <div style={{textAlign:"center",marginTop:"5px"}}>Month View Task Planner</div>
+          <div style={{textAlign:"center",marginTop:"15px"}}>Month View Task Planner</div>
       </div>
       <div className="main-content">
         {/* Sidebar */}

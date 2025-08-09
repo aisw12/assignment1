@@ -1,4 +1,7 @@
 /* === BASE STYLES === */
+html, body {
+  overflow-x: hidden;
+}
 .app {
   font-family: sans-serif;
   max-width: 100%;
@@ -137,12 +140,13 @@ button:hover {
 }
 .header-center {
   height: 100px;
-  background: linear-gradient(to right, #1e3c72, #2a5298);
+  background: linear-gradient(to right, #8b3f8f, #2a5298) ;
+  /* background: linear-gradient(to right, #1e3c72, #2a5298); */
   color: white;
   padding-top: 25px;
   font-size: 35px;
   text-align: center;
-  width: 100vw;
+  width: 100%;
 }
 
 /* Sidebar Layout */
@@ -230,6 +234,7 @@ button:hover {
     border-right: none;
     border-bottom: 1px solid #ddd;
   }
+  
 
   .calendar-container {
     width: 100%;
@@ -264,7 +269,7 @@ button:hover {
     font-size: 14px;
   }
   input[type="text"],select{
-    width: 100%;
+    width: 95%;
   }
   .header-center {
     font-size: 24px;
