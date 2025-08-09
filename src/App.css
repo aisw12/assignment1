@@ -142,6 +142,7 @@ button:hover {
   padding-top: 25px;
   font-size: 35px;
   text-align: center;
+  width: 100vw;
 }
 
 /* Sidebar Layout */
@@ -258,12 +259,13 @@ button:hover {
   }
 
   input[type="text"],
-  select,
   button {
-    width: 100%;
+    width: 10%;
     font-size: 14px;
   }
-
+  input[type="text"],select{
+    width: 100%;
+  }
   .header-center {
     font-size: 24px;
     /* padding: 15px 0; */
@@ -273,4 +275,21 @@ button:hover {
     flex-direction: column;
     align-items: stretch;
   }
+}
+.today {
+  border: 2px solid #4facfe;       /* Soft blue border */
+  background: linear-gradient(135deg, #e0f7fa, #ffffff); /* Subtle gradient */
+  border-radius: 8px;              /* Slightly rounded corners */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* Soft shadow */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.today:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.today .date-label {
+  font-weight: bold;
+  color: #0277bd; /* Deep teal for text */
 }

@@ -1,11 +1,16 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   format,
   eachDayOfInterval,
   startOfMonth,
   endOfMonth,
+  startOfWeek,
+  endOfWeek,
   isSameDay,
+  isSameMonth,
+  addMonths,
+  subMonths
 } from "date-fns";
 import "../App.css";
 
@@ -26,6 +31,7 @@ interface Task {
 
 const TaskPlanner: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [dragStart, setDragStart] = useState<Date | null>(null);
   const [dragEnd, setDragEnd] = useState<Date | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
@@ -37,12 +43,33 @@ const TaskPlanner: React.FC = () => {
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [timeFilter, setTimeFilter] = useState<number | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [searchQuery, setSearchQuery] = useState(""); // new state
+  const [searchQuery, setSearchQuery] = useState("");
   const idRef = useRef(0);
 
-  const monthStart = startOfMonth(new Date());
+  // Load tasks from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("tasks");
+    if (stored) {
+      const parsed = JSON.parse(stored).map((t: Task) => ({
+        ...t,
+        start: new Date(t.start),
+        end: new Date(t.end)
+      }));
+      setTasks(parsed);
+    }
+  }, []);
+
+  // Save tasks to localStorage
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
+  const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(monthStart);
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+
+  const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const handleMouseDown = (day: Date) => {
     setDragStart(day);
@@ -61,17 +88,32 @@ const TaskPlanner: React.FC = () => {
         setTasks(tasks.map((t) => t.id === task.id ? { ...t, start: newStart, end: newEnd } : t));
       }
     }
-
-    if (resizingTaskId !== null) {
-      const task = tasks.find((t) => t.id === resizingTaskId);
-      if (task) {
-        if (resizeEdge === "left" && day <= task.end) {
-          setTasks(tasks.map((t) => t.id === task.id ? { ...t, start: day } : t));
-        } else if (resizeEdge === "right" && day >= task.start) {
-          setTasks(tasks.map((t) => t.id === task.id ? { ...t, end: day } : t));
-        }
+if (resizingTaskId !== null) {
+  const task = tasks.find((t) => t.id === resizingTaskId);
+  if (task) {
+    if (resizeEdge === "left") {
+      // Allow expanding/shrinking to the left
+      if (day <= task.end) {
+        setTasks(tasks.map((t) =>
+          t.id === task.id
+            ? { ...t, start: day }
+            : t
+        ));
+      }
+    } else if (resizeEdge === "right") {
+      // Allow expanding/shrinking to the right
+      if (day >= task.start) {
+        setTasks(tasks.map((t) =>
+          t.id === task.id
+            ? { ...t, end: day }
+            : t
+        ));
       }
     }
+  }
+}
+
+
   };
 
   const handleMouseUp = () => {
@@ -81,7 +123,6 @@ const TaskPlanner: React.FC = () => {
       setSelectedRange({ start, end });
       setModalOpen(true);
     }
-
     setDragStart(null);
     setDragEnd(null);
     setDraggingTaskId(null);
@@ -120,17 +161,15 @@ const TaskPlanner: React.FC = () => {
   const isBetween = (date: Date, start: Date, end: Date) =>
     date >= start && date <= end;
 
- 
-const filteredTasks = tasks.filter((task) => {
-  const matchesCategory = categoryFilters.length === 0 || categoryFilters.includes(task.category);
-  const matchesTime = timeFilter === null || (() => {
-    const taskDay = task.start.getDate();
-    return timeFilter === 1 ? taskDay <= 7 : timeFilter === 2 ? taskDay <= 14 : taskDay <= 21;
-  })();
-  const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
-
-  return matchesCategory && matchesTime && matchesSearch;
-});
+  const filteredTasks = tasks.filter((task) => {
+    const matchesCategory = categoryFilters.length === 0 || categoryFilters.includes(task.category);
+    const matchesTime = timeFilter === null || (() => {
+      const taskDay = task.start.getDate();
+      return timeFilter === 1 ? taskDay <= 7 : timeFilter === 2 ? taskDay <= 14 : taskDay <= 21;
+    })();
+    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesTime && matchesSearch;
+  });
 
   const selecting = dragStart && dragEnd ? {
     start: dragStart < dragEnd ? dragStart : dragEnd,
@@ -140,7 +179,7 @@ const filteredTasks = tasks.filter((task) => {
   return (
     <div className="app">
       <div className="header-center">
-        <div style={{textAlign:"center",marginTop:"5px"}}>Month View Task Planner</div>
+          <div style={{textAlign:"center",marginTop:"5px"}}>Month View Task Planner</div>
       </div>
       <div className="main-content">
         {/* Sidebar */}
@@ -148,14 +187,13 @@ const filteredTasks = tasks.filter((task) => {
           <h3>Filter Tasks</h3>
           <div className="filter-section">
             <div className="search-bar">
-  <input
-    type="text"
-    placeholder="Search by task name..."
-    value={searchQuery}
-    onChange={(e) => setSearchQuery(e.target.value)}
-  />
-</div>
-
+              <input
+                type="text"
+                placeholder="Search by task name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
             <strong>Categories:</strong>
             <div className="filter-options">
               {Object.keys(categoryStyles).map((cat) => (
@@ -204,6 +242,11 @@ const filteredTasks = tasks.filter((task) => {
 
         {/* Calendar */}
         <div className="calendar-container">
+            <div style={{ textAlign: "right", marginTop: "15px",marginBottom:"20px" }}>
+          <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>{"<"}</button>
+          <span style={{ margin: "0 10px" }}>{format(currentMonth, "MMMM yyyy")}</span>
+          <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>{">"}</button>
+        </div>
           <div className="calendar-header">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div className="day-cell header-cell" key={day}>{day}</div>
@@ -212,15 +255,18 @@ const filteredTasks = tasks.filter((task) => {
           <div className="calendar" style={{ position: "relative" }}>
             {days.map((day) => (
               <div
-                key={day.toDateString()}
-                className={`day-cell ${selecting && isBetween(day, selecting.start, selecting.end) ? "selecting" : ""}`}
-                onMouseDown={() => handleMouseDown(day)}
-                onMouseEnter={() => handleMouseEnter(day)}
-                onMouseUp={handleMouseUp}
+                 key={day.toDateString()}
+  className={`day-cell 
+    ${!isSameMonth(day, monthStart) ? "faded" : ""} 
+    ${selecting && isBetween(day, selecting.start, selecting.end) ? "selecting" : ""} 
+    ${isSameDay(day, new Date()) ? "today" : ""}  // ✅ Highlight current date
+  `}
+  onMouseDown={() => handleMouseDown(day)}
+  onMouseEnter={() => handleMouseEnter(day)}
+  onMouseUp={handleMouseUp}
               >
                 <div className="date-label">{format(day, "d")}</div>
 
-                {/* Render Tasks */}
                 {filteredTasks.map((task) =>
                   isBetween(day, task.start, task.end) ? (
                     <div
@@ -234,20 +280,38 @@ const filteredTasks = tasks.filter((task) => {
                         setModalOpen(true);
                       }}
                       onMouseDown={(e) => {
-                        e.stopPropagation();
-                        if (isSameDay(day, task.start)) {
-                          setResizingTaskId(task.id);
-                          setResizeEdge("left");
-                          setDragStart(day);
-                        } else if (isSameDay(day, task.end)) {
-                          setResizingTaskId(task.id);
-                          setResizeEdge("right");
-                          setDragStart(day);
-                        } else {
-                          setDraggingTaskId(task.id);
-                          setDragStart(day);
-                        }
-                      }}
+  e.stopPropagation();
+  
+  const isStart = isSameDay(day, task.start);
+  const isEnd = isSameDay(day, task.end);
+
+  if (isStart && isEnd) {
+    // Single-day task — decide edge based on click position
+    const cellWidth = (e.currentTarget as HTMLElement).offsetWidth;
+    const clickX = e.nativeEvent.offsetX;
+
+    if (clickX < cellWidth / 2) {
+      setResizingTaskId(task.id);
+      setResizeEdge("left");
+    } else {
+      setResizingTaskId(task.id);
+      setResizeEdge("right");
+    }
+    setDragStart(day);
+  } else if (isStart) {
+    setResizingTaskId(task.id);
+    setResizeEdge("left");
+    setDragStart(day);
+  } else if (isEnd) {
+    setResizingTaskId(task.id);
+    setResizeEdge("right");
+    setDragStart(day);
+  } else {
+    setDraggingTaskId(task.id);
+    setDragStart(day);
+  }
+}}
+
                     >
                       {isSameDay(day, task.start) && <div className="resize-handle left" />}
                       <span className="task-title">{task.title}</span>
@@ -256,7 +320,6 @@ const filteredTasks = tasks.filter((task) => {
                   ) : null
                 )}
 
-                {/* Preview Task */}
                 {dragStart && dragEnd && (() => {
                   const start = dragStart < dragEnd ? dragStart : dragEnd;
                   const end = dragStart > dragEnd ? dragStart : dragEnd;
@@ -277,7 +340,6 @@ const filteredTasks = tasks.filter((task) => {
         </div>
       </div>
 
-      {/* Modal */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => {
           setModalOpen(false);
