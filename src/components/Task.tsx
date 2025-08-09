@@ -15,7 +15,7 @@ import {
 import "../App.css";
 
 const categoryStyles = {
-  "To Do": "#6643dbff",
+  "To Do": "#2d1678ff",
   "In Progress": "#ff9800",
   Review: "#9c27b0",
   Completed: "#4caf50",
